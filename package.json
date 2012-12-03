@@ -1,0 +1,25 @@
+{
+  "author": "the travelling salesmen"
+, "name": "flaskpost-new-backend"
+, "description": "redesigned backend for flaskpost"
+, "version": "0.0.0"
+, "repository": {
+    "url": ""
+  }
+, "scripts": {
+    "start": "node sockets"
+  , "test": "./node_modules/mocha/bin/mocha"
+  }
+, "dependencies": {
+    "socket.io": "*"
+  , "mongoose": "*"
+  , "winston": "*"
+  }
+, "devDependencies": {
+    "mocha": "*"
+  }
+, "optionalDependencies": {}
+, "engines": {
+    "node": "*"
+  }
+}
