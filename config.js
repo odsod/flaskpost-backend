@@ -16,5 +16,6 @@ module.exports = {
   }
 , sockets: {
     port: 3003
+  , internalLogLevel: 2
   }
 };
