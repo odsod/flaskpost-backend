@@ -1,10 +1,10 @@
 var
   winston = require('winston')
-, Logger = winston.Logger
+, Logger  = winston.Logger
 , Console = winston.transports.Console;
 
 var
-  DEFAULT_LEVEL = 'info'
+  DEFAULT_LEVEL  = 'info'
 , OVERRIDE_LEVEL = null;
 
 module.exports = function (namespace, level) {

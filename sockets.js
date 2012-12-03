@@ -4,6 +4,9 @@ var
 , io = require('socket.io').listen(config.port)
 , db = require('./db');
 
+io.set('logger', require('./logger')('socket.io'));
+io.set('log level', 2);
+
 io.sockets.on('connection', function (socket) {
   socket.on('requestBottles', function (data, fn) {
     log.info('incoming requestBottles', data);
