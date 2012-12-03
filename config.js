@@ -1,7 +1,18 @@
 module.exports = {
   db: {
-    address: 'localhost'
-  , name: 'flaskpost'
+    logLevel: 'warn'
+  , dev: {
+      address: 'localhost'
+    , name: 'flaskpost-dev'
+    }
+  , test: {
+      address: 'localhost'
+    , name: 'flaskpost-test'
+    }
+  , prod: {
+      address: 'localhost'
+    , name: 'flaskpost'
+    }
   }
 , sockets: {
     port: 3003

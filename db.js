@@ -1,24 +1,17 @@
 var
   config = require('./config').db
-, log = require('./logger')('db')
+, log = require('./logger')('db', config.logLevel)
 , mongoose = require('mongoose')
-, db = mongoose.createConnection(config.address, config.name)
 ;
-
-db.once('open', function () {
-  log.info('mongodb connection open');
-});
-
-var Tune = mongoose.Schema({
-  uri: String
-, location: String
-, date: { type: Date, default: Date.now }
-});
 
 var Bottle = mongoose.Schema({
   label: String
 , random: { type: Number, default: Math.random }
-, tunes: [Tune]
+, tunes: [{
+    uri: String
+  , location: String
+  , date: { type: Date, default: Date.now }
+  }]
 });
 
 Bottle.statics.grabBottles = function (amount, fn) {
@@ -29,7 +22,7 @@ Bottle.statics.grabBottles = function (amount, fn) {
     .gt('random', random)
     .limit(amount)
     .exec(function (err, grab1) {
-      log.debug('first grab', grab1);
+      log.info('first grab', grab1);
       var remaining = amount - grab1.length;
       if (remaining) {
         self
@@ -37,51 +30,49 @@ Bottle.statics.grabBottles = function (amount, fn) {
           .lt('random', random)
           .limit(remaining)
           .exec(function (err, grab2) {
-            log.debug('second grab', grab2);
-            fn(grab1.toObject().concat(grab2.toObject()));
+            log.info('second grab', grab2);
+            fn(grab1.concat(grab2));
           });
       } else {
-        fn(grab1.toObject());
+        fn(grab1);
       }
     });
 };
 
-Bottle.statics.createBottle = function (data) {
+Bottle.statics.addBottle = function (data, fn) {
   var
     BottleModel = this
-  , TuneModel = this.model('Tune')
-  , tune = new TuneModel({
-      uri: data.uri
-    , location: data.location
-    })
   , bottle = new BottleModel({
       label: data.label
-    , tunes: [tune]
     })
   ;
-  log.debug('saving bottle', bottle);
-  bottle.save();
+  var i = data.tunes.length;
+  while (i--) {
+    bottle.tunes.push(data.tunes[i]);
+  }
+  log.info('saving bottle', bottle);
+  bottle.save(fn);
 };
 
-Bottle.statics.addTune = function (data) {
-  var
-    TuneModel = this.model('Tune')
-  , tune = new TuneModel({
-      uri: data.uri
-    , location: data.location
-    })
-  ;
-  log.debug('adding tune', {
-    tune: tune
+Bottle.statics.addTune = function (data, fn) {
+  log.info('adding tune', {
+    tune: data.tune
   , bottle: data.id
   });
   this
     .findByIdAndUpdate(data.id, {
-      $push: { tunes: tune }
+      $push: { tunes: data.tune }
     })
-    .exec(function () {});
+    .exec(fn);
 };
 
-module.exports = {
-  Bottle: db.model('Bottle', Bottle)
+exports.connect = function (address, name, fn) {
+  var db = mongoose.createConnection(address, name);
+
+  db.once('open', function () {
+    log.info('mongodb connection open');
+    fn && fn();
+  });
+
+  exports.Bottle = db.model('Bottle', Bottle);
 };

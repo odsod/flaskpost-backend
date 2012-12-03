@@ -4,7 +4,7 @@ var
 , Console = winston.transports.Console;
 
 var
-  DEFAULT_LEVEL  = 'info'
+  DEFAULT_LEVEL  = 'warn'
 , OVERRIDE_LEVEL = null;
 
 module.exports = function (namespace, level) {
