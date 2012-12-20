@@ -1,12 +1,30 @@
 var
   config = require('./config').db
-, log = require('./logger')('db', config.logLevel)
+, log = require('./logger')('db', 'debug')
 , mongoose = require('mongoose')
 ;
 
+function cleanTunes(arr) {
+  return arr.map(function (t) {
+    return {
+      uri: t.uri
+    };
+  });
+}
+
+function cleanBottles(arr) {
+  return arr.map(function (b) {
+    return {
+      id: b._id
+    , label: b.label
+    , tunes: cleanTunes(b.tunes)
+    };
+  });
+}
+
 var Bottle = mongoose.Schema({
   label: String
-, random: { type: Number, default: Math.random }
+, random: { type: Number, default: Math.random, index: true }
 , tunes: [{
     uri: String
   , location: String
@@ -17,24 +35,44 @@ var Bottle = mongoose.Schema({
 Bottle.statics.grabBottles = function (amount, fn) {
   var self = this;
   var random = Math.random();
+  log.debug('performing query for bottles with random > ' + random);
   self
     .find()
-    .gt('random', random)
+    .gte('random', random)
     .limit(amount)
     .exec(function (err, grab1) {
-      log.info('first grab', grab1);
-      var remaining = amount - grab1.length;
-      if (remaining) {
-        self
-          .find()
-          .lt('random', random)
-          .limit(remaining)
-          .exec(function (err, grab2) {
-            log.info('second grab', grab2);
-            fn(grab1.concat(grab2));
-          });
+      if (err) {
+        log.error('error in first grab query: ', err);
+        fn([]);
       } else {
-        fn(grab1);
+        grab1 = grab1 || [];
+        grab1 = cleanBottles(grab1);
+        log.debug('returned from query with', {
+          bottles: grab1
+        });
+        var remaining = amount - grab1.length;
+        if (remaining) {
+          log.debug('performing query for bottles with random < ' + random);
+          self
+            .find()
+            .lte('random', random)
+            .limit(remaining)
+            .exec(function (err, grab2) {
+              if (err) {
+                log.error('error in 2:nd grab query: ', err);
+                fn([]);
+              } else {
+                grab2 = grab2 || [];
+                grab2 = cleanBottles(grab2);
+                log.debug('returned from query with', {
+                  bottles: grab2
+                });
+                fn(grab1.concat(grab2));
+              }
+            });
+        } else {
+          fn(grab1);
+        }
       }
     });
 };

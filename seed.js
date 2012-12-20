@@ -127,6 +127,22 @@ function randomBottle() {
   };
 }
 
+function randomNumberedBottle(number) {
+  return {
+    label: 'Bottle ' + number
+  , tunes: [randomTune()]
+  };
+}
+
+function randomNumberedBottles(amount) {
+  var bottles = [];
+  var i = amount;
+  while (i--) {
+    bottles.push(randomNumberedBottle(i));
+  }
+  return bottles;
+}
+
 function randomBottles(amount) {
   var bottles = [];
   while (amount--) {
@@ -142,4 +158,6 @@ module.exports = {
 , randomTune: randomTune
 , randomBottle: randomBottle
 , randomBottles: randomBottles
+, randomNumberedBottle: randomNumberedBottle
+, randomNumberedBottles: randomNumberedBottles
 };
